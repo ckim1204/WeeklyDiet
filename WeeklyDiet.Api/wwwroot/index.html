@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Diet Planner</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="topbar">
+        <div>
+            <h1>Weekly Diet Planner</h1>
+            <p>Plan, tweak, and shop with confidence.</p>
+        </div>
+        <div class="status" id="statusBadge">Idle</div>
+    </header>
+
+    <nav class="nav">
+        <button class="nav-btn active" data-view="plans">Plans</button>
+        <button class="nav-btn" data-view="foods">Foods</button>
+        <button class="nav-btn" data-view="ingredients">Ingredients</button>
+    </nav>
+
+    <main>
+        <section class="panel view" data-view="plans">
+            <div class="panel-header">
+                <h2>Weekly Plans</h2>
+                <div class="plan-actions">
+                    <button id="refreshPlans">Refresh</button>
+                    <button id="generateCurrent">Generate current</button>
+                    <button id="generateUpcoming">Generate upcoming</button>
+                </div>
+            </div>
+            <div class="plan-tabs">
+                <button class="tab active" data-plan="current">Current week</button>
+                <button class="tab" data-plan="upcoming">Upcoming week</button>
+            </div>
+            <div id="planContainer"></div>
+            <div class="panel-header">
+                <h3>Grocery List</h3>
+                <small>Updates when meals change.</small>
+            </div>
+            <ul id="groceryList" class="pill-list"></ul>
+        </section>
+
+        <section class="panel view hidden" data-view="foods">
+            <div class="panel-header">
+                <div>
+                    <h2>Foods</h2>
+                    <small>Select ingredients and allowed meals.</small>
+                </div>
+                <div class="plan-actions">
+                    <button id="addFoodBtn">Add food</button>
+                </div>
+            </div>
+            <div class="inline-form with-gap">
+                <input type="search" id="foodSearch" placeholder="Search foods">
+            </div>
+            <div id="foodList" class="card-list"></div>
+        </section>
+
+        <section class="panel view hidden" data-view="food-editor">
+            <div class="panel-header">
+                <div>
+                    <h2 id="foodEditorTitle">Food Editor</h2>
+                    <small id="foodMode" class="chip subtle">Add mode</small>
+                </div>
+                <div class="plan-actions">
+                    <button id="foodBackBtn" class="secondary">Back to foods</button>
+                </div>
+            </div>
+            <form id="foodForm" class="stacked-form">
+                <label>
+                    <span>Name</span>
+                    <input type="text" id="foodName" placeholder="E.g. Veggie Omelette" required>
+                </label>
+                <div class="checkbox-group">
+                    <span>Ingredients</span>
+                    <input type="search" id="foodIngredientSearch" placeholder="Filter ingredients">
+                    <div id="foodIngredientCheckboxes" class="checkbox-list"></div>
+                </div>
+                <fieldset id="mealTypeGroup">
+                    <legend>Meal types</legend>
+                    <label><input type="checkbox" value="Breakfast" checked> Breakfast</label>
+                    <label><input type="checkbox" value="Lunch" checked> Lunch</label>
+                    <label><input type="checkbox" value="Dinner" checked> Dinner</label>
+                </fieldset>
+                <div class="form-actions">
+                    <button type="submit" id="foodSubmit">Save Food</button>
+                    <button type="button" id="foodCancel" class="secondary hidden">Cancel edit</button>
+                </div>
+            </form>
+        </section>
+
+        <section class="panel view hidden" data-view="ingredients">
+            <div class="panel-header">
+                <div>
+                    <h2>Ingredients</h2>
+                    <small>Add items once, reuse anywhere.</small>
+                </div>
+                <div id="ingredientMode" class="chip subtle">Add mode</div>
+            </div>
+            <form id="ingredientForm" class="inline-form big-gap">
+                <input type="text" id="ingredientName" placeholder="Ingredient name" required>
+                <button type="submit" id="ingredientSubmit">Add</button>
+                <button type="button" id="ingredientCancel" class="secondary hidden">Cancel edit</button>
+            </form>
+            <div class="inline-form with-gap">
+                <input type="search" id="ingredientSearch" placeholder="Search ingredients">
+            </div>
+            <ul id="ingredientList" class="pill-list"></ul>
+        </section>
+    </main>
+
+    <template id="planTemplate">
+        <div class="plan-grid">
+            <div class="plan-meta">
+                <div class="meta-label">Week</div>
+                <div class="meta-value plan-week"></div>
+                <div class="meta-label">Dates</div>
+                <div class="meta-value plan-dates"></div>
+            </div>
+            <table class="plan-table">
+                <thead>
+                    <tr>
+                        <th>Meal</th>
+                        <th>Mon</th>
+                        <th>Tue</th>
+                        <th>Wed</th>
+                        <th>Thu</th>
+                        <th>Fri</th>
+                        <th>Sat</th>
+                        <th>Sun</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </template>
+
+    <script src="app.js"></script>
+</body>
+</html>
