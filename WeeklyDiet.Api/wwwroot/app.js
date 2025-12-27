@@ -298,7 +298,11 @@ function renderFoods() {
             chip.textContent = food.allowedMealTypes.join(', ');
             header.append(title, chip);
 
-            const tags = new DocumentFragment();
+            const accordion = document.createElement('details');
+            accordion.className = 'accordion';
+            const summary = document.createElement('summary');
+            summary.textContent = 'Ingredients';
+            accordion.appendChild(summary);
             const tagsContainer = document.createElement('div');
             tagsContainer.className = 'tags';
             food.ingredients.forEach(i => {
@@ -307,7 +311,7 @@ function renderFoods() {
                 tag.textContent = i.name;
                 tagsContainer.appendChild(tag);
             });
-            tags.appendChild(tagsContainer);
+            accordion.appendChild(tagsContainer);
 
             const actions = document.createElement('div');
             actions.className = 'cell-actions';
@@ -340,7 +344,7 @@ function renderFoods() {
             });
 
             actions.append(editBtn, delBtn);
-            card.append(header, tagsContainer, actions);
+            card.append(header, accordion, actions);
             foodList.appendChild(card);
         });
 }
@@ -424,16 +428,13 @@ function renderMealCell(plan, entry) {
     const title = document.createElement('div');
     title.className = 'meal-title';
     title.textContent = entry.foodName || 'Unassigned';
+    if (entry.isLeftover) {
+        const leftoverTag = document.createElement('span');
+        leftoverTag.className = 'meal-meta';
+        leftoverTag.textContent = ' (Leftover)';
+        title.appendChild(leftoverTag);
+    }
     cell.appendChild(title);
-
-    const meta = document.createElement('div');
-    meta.className = 'meal-meta';
-    const notes = [];
-    if (entry.isLeftover) notes.push('Leftover');
-    const isSourceForLeftover = plan.meals.some(m => m.leftoverFromMealEntryId === entry.id);
-    if (isSourceForLeftover) notes.push('Feeds tomorrow');
-    meta.textContent = notes.join(' · ');
-    cell.appendChild(meta);
 
     const actions = document.createElement('div');
     actions.className = 'cell-actions';
@@ -444,6 +445,7 @@ function renderMealCell(plan, entry) {
     actions.appendChild(replaceBtn);
 
     if (state.selectedPlanKey === 'current') {
+        const isSourceForLeftover = plan.meals.some(m => m.leftoverFromMealEntryId === entry.id);
         const leftoverBtn = document.createElement('button');
         leftoverBtn.textContent = isSourceForLeftover ? 'Clear leftover' : 'Use as leftover';
         leftoverBtn.addEventListener('click', () => toggleLeftover(plan, entry, !isSourceForLeftover));
