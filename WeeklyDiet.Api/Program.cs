@@ -1,3 +1,4 @@
+using System.Net;
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
@@ -23,12 +24,6 @@ builder.Services.AddScoped<PlanningService>();
 builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
-
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.EnsureCreated();
-}
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
@@ -412,9 +407,24 @@ static string NormalizeConnectionString(string raw)
         var username = userInfoParts.Length > 0 ? Uri.UnescapeDataString(userInfoParts[0]) : string.Empty;
         var password = userInfoParts.Length > 1 ? Uri.UnescapeDataString(userInfoParts[1]) : string.Empty;
 
+        var host = uri.Host;
+        try
+        {
+            var addresses = Dns.GetHostAddresses(host);
+            var ipv4 = addresses.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork);
+            if (ipv4 is not null)
+            {
+                host = ipv4.ToString();
+            }
+        }
+        catch
+        {
+            // ignore DNS failures; fall back to original host
+        }
+
         var builder = new NpgsqlConnectionStringBuilder
         {
-            Host = uri.Host,
+            Host = host,
             Port = uri.IsDefaultPort ? 5432 : uri.Port,
             Database = uri.AbsolutePath.Trim('/'),
             Username = username,
