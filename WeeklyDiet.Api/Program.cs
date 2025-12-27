@@ -19,7 +19,11 @@ var connectionString = Environment.GetEnvironmentVariable("SUPABASE_CONNECTION")
     ?? builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Database connection string not configured. Set SUPABASE_CONNECTION.");
 
-builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(NormalizeConnectionString(connectionString)));
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(NormalizeConnectionString(connectionString), npgsql =>
+    {
+        npgsql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(2), null);
+    }));
 
 builder.Services.AddScoped<PlanningService>();
 builder.Services.AddEndpointsApiExplorer();
@@ -39,10 +43,11 @@ app.UseExceptionHandler(errorApp =>
         if (feature?.Error is not null)
         {
             logger.LogError(feature.Error, "Unhandled exception");
+            var baseMessage = feature.Error.GetBaseException().Message;
             await context.Response.WriteAsJsonAsync(new
             {
                 error = "Internal server error",
-                detail = feature.Error.Message
+                detail = baseMessage
             });
         }
         else
@@ -385,6 +390,18 @@ app.MapGet("/api/plans/{year:int}/{week:int}/grocery-list", async (int year, int
 });
 
 app.MapGet("/api/health", () => Results.Ok(new { Status = "Healthy" }));
+app.MapGet("/api/health/db", async (AppDbContext db, CancellationToken ct) =>
+{
+    try
+    {
+        await db.Database.ExecuteSqlRawAsync("SELECT 1", ct);
+        return Results.Ok(new { Status = "Healthy" });
+    }
+    catch (Exception ex)
+    {
+        return Results.Problem(ex.GetBaseException().Message);
+    }
+});
 
 app.MapFallbackToFile("index.html");
 
