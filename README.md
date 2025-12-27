@@ -7,7 +7,7 @@ Local-first weekly meal planner with grocery list support, built with ASP.NET Co
 - Generate weekly plans (current + upcoming) on demand via UI; respects meal types, minimizes duplicates, evenly distributes unavoidable repeats.
 - Replace individual meals and mark meals as leftovers for the next day (current week only, including Sunday → next week Monday).
 - Grocery list per plan (unique ingredient list) that updates after replacements/leftovers.
-- Single-process app serving both API and UI; optimized for low-power devices (e.g., Raspberry Pi B+).
+- Single-process app serving both API and UI; light enough for low-power devices.
 
 ## Tech Stack
 - Backend: ASP.NET Core 9 (Minimal API), EF Core 9, PostgreSQL (Supabase).
@@ -23,6 +23,13 @@ Local-first weekly meal planner with grocery list support, built with ASP.NET Co
    ```
 3. Open the UI at http://localhost:5005 (default from `launchSettings.json`). Static files are under `WeeklyDiet.Api/wwwroot`.
 4. Configure DB: set env var `SUPABASE_CONNECTION` (e.g. `postgresql://postgres:gK4OaoCNKaQfu7k6@db.zrkqputinqsepgjbayjk.supabase.co:5432/postgres`). `appsettings.json` has a local fallback; the env var wins.
+
+### Run with Docker (local or Render)
+```bash
+docker build -t weeklydiet .
+docker run -p 8080:8080 -e SUPABASE_CONNECTION=postgresql://postgres:gK4OaoCNKaQfu7k6@db.zrkqputinqsepgjbayjk.supabase.co:5432/postgres weeklydiet
+```
+Then open http://localhost:8080.
 
 ### API Highlights
 - Ingredients: `GET/POST/PUT/DELETE /api/ingredients`
@@ -45,59 +52,17 @@ Local-first weekly meal planner with grocery list support, built with ASP.NET Co
 ## GitHub Actions CI
 - Trigger: push to `main`.
 - Steps: checkout → setup .NET 9 → restore → build (Release) → publish self-contained `linux-arm` → upload artifact.
-- Artifact: `publish-linux-arm` folder ready for manual deploy on Raspberry Pi.
+- Artifact: `publish-linux-arm` folder ready for manual deploy on ARM devices.
 
-## Raspberry Pi B+ Deployment (manual)
-Assumes Raspberry Pi OS (32-bit) with network access to Supabase.
-
-1) Install .NET runtime (9.x, armv7l)
-```bash
-wget https://download.visualstudio.microsoft.com/download/pr/9.0.0/dotnet-runtime-9.0.0-linux-arm.tar.gz -O dotnet-runtime.tar.gz
-sudo mkdir -p /usr/share/dotnet
-sudo tar -xf dotnet-runtime.tar.gz -C /usr/share/dotnet
-echo 'export DOTNET_ROOT=/usr/share/dotnet' >> ~/.bashrc
-echo 'export PATH=$PATH:/usr/share/dotnet' >> ~/.bashrc
-source ~/.bashrc
-dotnet --info
-```
-
-2) Get the app
-```bash
-cd /opt
-sudo git clone <repo-url> weeklydiet
-cd weeklydiet
-sudo dotnet publish WeeklyDiet.Api -c Release -r linux-arm --self-contained false -o /opt/weeklydiet/publish
-```
-
-3) Configure Supabase connection (env var)
-```bash
-echo 'SUPABASE_CONNECTION=postgresql://postgres:gK4OaoCNKaQfu7k6@db.zrkqputinqsepgjbayjk.supabase.co:5432/postgres' | sudo tee -a /etc/environment
-```
-
-4) systemd service (`/etc/systemd/system/weeklydiet.service`)
-```
-[Unit]
-Description=Weekly Diet Planner
-After=network.target
-
-[Service]
-WorkingDirectory=/opt/weeklydiet/publish
-ExecStart=/usr/share/dotnet/dotnet /opt/weeklydiet/publish/WeeklyDiet.Api.dll
-Restart=always
-User=pi
-Environment=ASPNETCORE_URLS=http://0.0.0.0:5005
-Environment=SUPABASE_CONNECTION=${SUPABASE_CONNECTION}
-
-[Install]
-WantedBy=multi-user.target
-```
-```bash
-sudo systemctl daemon-reload
-sudo systemctl enable weeklydiet --now
-sudo systemctl status weeklydiet
-```
-
-5) Access on LAN: http://<raspberrypi-ip>:5005
+## Render (Docker) deployment
+- Service type: Web Service (Docker).
+- Build: Render uses the root `Dockerfile`.
+- Port: 8080 (exposed in Dockerfile); Render auto-detects.
+- Env vars:
+  - `SUPABASE_CONNECTION=postgresql://postgres:gK4OaoCNKaQfu7k6@db.zrkqputinqsepgjbayjk.supabase.co:5432/postgres`
+  - `ASPNETCORE_URLS` already set in Dockerfile to `http://+:8080`.
+- Health check: `/api/health`.
+- Migrations: run once via a Render Job or shell using `dotnet ef database update -p WeeklyDiet.Api -s WeeklyDiet.Api` with the same env vars.
 
 ## Operational Notes
 - No authentication by design; keep network limited.
