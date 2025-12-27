@@ -1,6 +1,6 @@
 # WeeklyDiet
 
-Local-first weekly meal planner with grocery list support, built with ASP.NET Core 9 Minimal APIs, EF Core, SQLite, and a lightweight vanilla HTML/CSS/JS front-end.
+Local-first weekly meal planner with grocery list support, built with ASP.NET Core 9 Minimal APIs, EF Core, PostgreSQL (Supabase), and a lightweight vanilla HTML/CSS/JS front-end.
 
 ## Features
 - Manage ingredients and foods (unique names, meal-type constraints).
@@ -10,19 +10,19 @@ Local-first weekly meal planner with grocery list support, built with ASP.NET Co
 - Single-process app serving both API and UI; optimized for low-power devices (e.g., Raspberry Pi B+).
 
 ## Tech Stack
-- Backend: ASP.NET Core 9 (Minimal API), EF Core 9, SQLite.
+- Backend: ASP.NET Core 9 (Minimal API), EF Core 9, PostgreSQL (Supabase).
 - Frontend: Vanilla HTML/CSS/JS served from `wwwroot`.
 - Hosting: Single Kestrel process; no auth; local network only.
 
 ## Getting Started (Local)
-1. Prerequisites: .NET 9 SDK, SQLite (library only; no server needed).
+1. Prerequisites: .NET 9 SDK, PostgreSQL connection (Supabase).
 2. Restore/build:
    ```bash
    dotnet restore
    dotnet run --project WeeklyDiet.Api
    ```
 3. Open the UI at http://localhost:5005 (default from `launchSettings.json`). Static files are under `WeeklyDiet.Api/wwwroot`.
-4. SQLite database lives at `WeeklyDiet.Api/Data/weeklydiet.db` (auto-created). Delete the file to reset data.
+4. Configure DB: set env var `SUPABASE_CONNECTION` (e.g. `postgresql://postgres:gK4OaoCNKaQfu7k6@db.zrkqputinqsepgjbayjk.supabase.co:5432/postgres`). `appsettings.json` has a local fallback; the env var wins.
 
 ### API Highlights
 - Ingredients: `GET/POST/PUT/DELETE /api/ingredients`
@@ -48,7 +48,7 @@ Local-first weekly meal planner with grocery list support, built with ASP.NET Co
 - Artifact: `publish-linux-arm` folder ready for manual deploy on Raspberry Pi.
 
 ## Raspberry Pi B+ Deployment (manual)
-Assumes Raspberry Pi OS (32-bit) with network access.
+Assumes Raspberry Pi OS (32-bit) with network access to Supabase.
 
 1) Install .NET runtime (9.x, armv7l)
 ```bash
@@ -69,11 +69,9 @@ cd weeklydiet
 sudo dotnet publish WeeklyDiet.Api -c Release -r linux-arm --self-contained false -o /opt/weeklydiet/publish
 ```
 
-3) Database location & permissions
+3) Configure Supabase connection (env var)
 ```bash
-sudo mkdir -p /opt/weeklydiet/publish/Data
-sudo chown -R pi:pi /opt/weeklydiet/publish
-# optional: edit /opt/weeklydiet/publish/appsettings.json to change the SQLite path
+echo 'SUPABASE_CONNECTION=postgresql://postgres:gK4OaoCNKaQfu7k6@db.zrkqputinqsepgjbayjk.supabase.co:5432/postgres' | sudo tee -a /etc/environment
 ```
 
 4) systemd service (`/etc/systemd/system/weeklydiet.service`)
@@ -88,6 +86,7 @@ ExecStart=/usr/share/dotnet/dotnet /opt/weeklydiet/publish/WeeklyDiet.Api.dll
 Restart=always
 User=pi
 Environment=ASPNETCORE_URLS=http://0.0.0.0:5005
+Environment=SUPABASE_CONNECTION=${SUPABASE_CONNECTION}
 
 [Install]
 WantedBy=multi-user.target

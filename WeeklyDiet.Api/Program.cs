@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using WeeklyDiet.Api.Data;
 using WeeklyDiet.Api.DTOs;
 using WeeklyDiet.Api.Models;
@@ -12,10 +13,11 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
 });
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
-});
+var connectionString = Environment.GetEnvironmentVariable("SUPABASE_CONNECTION")
+    ?? builder.Configuration.GetConnectionString("DefaultConnection")
+    ?? throw new InvalidOperationException("Database connection string not configured. Set SUPABASE_CONNECTION.");
+
+builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(NormalizeConnectionString(connectionString)));
 
 builder.Services.AddScoped<PlanningService>();
 builder.Services.AddEndpointsApiExplorer();
@@ -24,9 +26,7 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var env = scope.ServiceProvider.GetRequiredService<IHostEnvironment>();
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    Directory.CreateDirectory(Path.Combine(env.ContentRootPath, "Data"));
     db.Database.EnsureCreated();
 }
 
@@ -395,4 +395,35 @@ static WeeklyPlanDto ToDto(WeeklyPlan plan)
                 m.ManualFoodId,
                 m.BaseFoodId))
             .ToList());
+}
+
+static string NormalizeConnectionString(string raw)
+{
+    if (string.IsNullOrWhiteSpace(raw))
+    {
+        throw new ArgumentException("Connection string is empty.");
+    }
+
+    if (raw.StartsWith("postgres://", StringComparison.OrdinalIgnoreCase) ||
+        raw.StartsWith("postgresql://", StringComparison.OrdinalIgnoreCase))
+    {
+        var uri = new Uri(raw);
+        var userInfoParts = (uri.UserInfo ?? string.Empty).Split(':', 2);
+        var username = userInfoParts.Length > 0 ? Uri.UnescapeDataString(userInfoParts[0]) : string.Empty;
+        var password = userInfoParts.Length > 1 ? Uri.UnescapeDataString(userInfoParts[1]) : string.Empty;
+
+        var builder = new NpgsqlConnectionStringBuilder
+        {
+            Host = uri.Host,
+            Port = uri.IsDefaultPort ? 5432 : uri.Port,
+            Database = uri.AbsolutePath.Trim('/'),
+            Username = username,
+            Password = password,
+            SslMode = SslMode.Require
+        };
+
+        return builder.ToString();
+    }
+
+    return raw;
 }
