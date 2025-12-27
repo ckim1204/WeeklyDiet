@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
 using WeeklyDiet.Api.Data;
@@ -24,6 +25,32 @@ builder.Services.AddScoped<PlanningService>();
 builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
+
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var feature = context.Features.Get<IExceptionHandlerFeature>();
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "application/json";
+
+        if (feature?.Error is not null)
+        {
+            logger.LogError(feature.Error, "Unhandled exception");
+            await context.Response.WriteAsJsonAsync(new
+            {
+                error = "Internal server error",
+                detail = feature.Error.Message
+            });
+        }
+        else
+        {
+            await context.Response.WriteAsJsonAsync(new { error = "Internal server error" });
+        }
+    });
+});
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
