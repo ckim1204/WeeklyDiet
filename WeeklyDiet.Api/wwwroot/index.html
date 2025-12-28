@@ -138,6 +138,27 @@
         </div>
     </template>
 
+    <div id="replaceModal" class="modal hidden" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h3 id="replaceTitle">Replace meal</h3>
+                    <small id="replaceSubtitle"></small>
+                </div>
+                <button id="replaceClose" class="secondary">X</button>
+            </div>
+            <div class="inline-form with-gap">
+                <input type="search" id="replaceSearch" placeholder="Filter foods...">
+            </div>
+            <div id="replaceList" class="replace-list"></div>
+            <div class="form-actions">
+                <button id="replaceApply">Apply</button>
+                <button id="replaceCancel" class="secondary">Cancel</button>
+            </div>
+            <div id="replaceError" class="error-text"></div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>

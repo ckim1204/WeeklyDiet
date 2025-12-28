@@ -18,7 +18,10 @@ const state = {
     ingredientFilter: '',
     foodFilter: '',
     foodIngredientFilter: '',
-    selectedFoodIngredientIds: []
+    selectedFoodIngredientIds: [],
+    replaceContext: null,
+    replaceFilter: '',
+    replaceSelectedId: null
 };
 
 const statusBadge = document.getElementById('statusBadge');
@@ -45,6 +48,15 @@ const foodEditorTitle = document.getElementById('foodEditorTitle');
 
 const planContainer = document.getElementById('planContainer');
 const groceryList = document.getElementById('groceryList');
+const replaceModal = document.getElementById('replaceModal');
+const replaceList = document.getElementById('replaceList');
+const replaceSearch = document.getElementById('replaceSearch');
+const replaceApply = document.getElementById('replaceApply');
+const replaceCancel = document.getElementById('replaceCancel');
+const replaceClose = document.getElementById('replaceClose');
+const replaceTitle = document.getElementById('replaceTitle');
+const replaceSubtitle = document.getElementById('replaceSubtitle');
+const replaceError = document.getElementById('replaceError');
 
 document.querySelectorAll('.nav-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -158,6 +170,13 @@ foodIngredientSearch.addEventListener('input', (e) => {
     state.foodIngredientFilter = e.target.value.toLowerCase();
     renderIngredientCheckboxes();
 });
+replaceSearch.addEventListener('input', (e) => {
+    state.replaceFilter = e.target.value.toLowerCase();
+    renderReplaceList();
+});
+replaceApply.addEventListener('click', applyReplace);
+replaceCancel.addEventListener('click', closeReplaceDialog);
+replaceClose.addEventListener('click', closeReplaceDialog);
 addFoodBtn.addEventListener('click', () => {
     resetFoodForm();
     setFoodIngredientSelection([]);
@@ -441,7 +460,7 @@ function renderMealCell(plan, entry) {
 
     const replaceBtn = document.createElement('button');
     replaceBtn.textContent = 'Replace';
-    replaceBtn.addEventListener('click', () => replaceMeal(plan, entry));
+    replaceBtn.addEventListener('click', () => openReplaceDialog(plan, entry));
     actions.appendChild(replaceBtn);
 
     if (state.selectedPlanKey === 'current') {
@@ -456,22 +475,111 @@ function renderMealCell(plan, entry) {
     return cell;
 }
 
-async function replaceMeal(plan, entry) {
-    const options = state.foods.filter(f => f.allowedMealTypes.includes(entry.mealType));
+function openReplaceDialog(plan, entry) {
+    const options = state.foods
+        .filter(f => f.allowedMealTypes.includes(entry.mealType))
+        .filter(f => f.id !== entry.foodId);
     if (options.length === 0) {
         alert('Add foods for this meal type first.');
         return;
     }
-    const choice = prompt(`Choose option for ${entry.mealType}:\n${options.map((o, idx) => `${idx + 1}. ${o.name}`).join('\n')}`, '1');
-    if (!choice) return;
-    const idx = parseInt(choice, 10) - 1;
-    const selected = options[idx];
-    if (!selected) return;
+    state.replaceContext = { plan, entry, options };
+    state.replaceFilter = '';
+    state.replaceSelectedId = null;
+    replaceSearch.value = '';
+    replaceError.textContent = '';
+    replaceTitle.textContent = `Replace ${entry.mealType}`;
+    replaceSubtitle.textContent = `${plan.weekLabel} · Day ${entry.dayOfWeek}`;
+    renderReplaceList();
+    replaceModal.classList.remove('hidden');
+}
 
-    await callApi(`/api/plans/${plan.year}/${plan.weekNumber}/days/${entry.dayOfWeek}/meals/${entry.mealType}/replace?foodId=${selected.id}`, {
+function renderReplaceList() {
+    replaceList.innerHTML = '';
+    if (!state.replaceContext) return;
+    const { options } = state.replaceContext;
+    const filtered = options.filter(o =>
+        !state.replaceFilter ||
+        o.name.toLowerCase().includes(state.replaceFilter) ||
+        o.ingredients.some(i => i.name.toLowerCase().includes(state.replaceFilter))
+    );
+    filtered.forEach(o => {
+        const item = document.createElement('div');
+        item.className = 'replace-item';
+        const info = document.createElement('div');
+        info.className = 'info';
+        const name = document.createElement('div');
+        name.className = 'name';
+        name.textContent = o.name;
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.textContent = `Ingredients: ${o.ingredients.map(i => i.name).join(', ')}`;
+        info.append(name, meta);
+        const radio = document.createElement('input');
+        radio.type = 'radio';
+        radio.name = 'replaceFood';
+        radio.value = o.id;
+        radio.checked = state.replaceSelectedId === o.id;
+        radio.addEventListener('change', () => state.replaceSelectedId = o.id);
+        item.append(info, radio);
+        replaceList.appendChild(item);
+    });
+}
+
+function renderReplaceList() {
+    replaceList.innerHTML = '';
+    if (!state.replaceContext) return;
+    const { options } = state.replaceContext;
+    const filtered = options.filter(o =>
+        !state.replaceFilter ||
+        o.name.toLowerCase().includes(state.replaceFilter) ||
+        o.ingredients.some(i => i.name.toLowerCase().includes(state.replaceFilter))
+    );
+    filtered.forEach(o => {
+        const item = document.createElement('div');
+        item.className = 'replace-item';
+        if (state.replaceSelectedId === o.id) {
+            item.classList.add('selected');
+        }
+        const info = document.createElement('div');
+        info.className = 'info';
+        const name = document.createElement('div');
+        name.className = 'name';
+        name.textContent = o.name;
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.textContent = `Ingredients: ${o.ingredients.map(i => i.name).join(', ')}`;
+        info.append(name, meta);
+        item.append(info);
+        item.addEventListener('click', () => {
+            state.replaceSelectedId = o.id;
+            renderReplaceList();
+        });
+        replaceList.appendChild(item);
+    });
+}
+
+async function applyReplace() {
+    if (!state.replaceContext) return;
+    const selectedId = state.replaceSelectedId;
+    if (!selectedId) {
+        replaceError.textContent = 'Select a food to apply.';
+        return;
+    }
+    const { plan, entry } = state.replaceContext;
+    await callApi(`/api/plans/${plan.year}/${plan.weekNumber}/days/${entry.dayOfWeek}/meals/${entry.mealType}/replace?foodId=${selectedId}`, {
         method: 'POST'
     });
+    closeReplaceDialog();
     await loadPlans();
+}
+
+function closeReplaceDialog() {
+    replaceModal.classList.add('hidden');
+    state.replaceContext = null;
+    state.replaceSelectedId = null;
+    state.replaceFilter = '';
+    replaceError.textContent = '';
 }
 
 async function toggleLeftover(plan, entry, isLeftover) {

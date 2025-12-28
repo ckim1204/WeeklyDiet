@@ -153,6 +153,40 @@ button:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; transform
 .accordion summary { cursor: pointer; color: var(--muted); }
 .accordion[open] summary { color: var(--text); }
 .accordion .tags { margin-top: 0.35rem; }
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 1rem;
+}
+.modal-content {
+    background: #0b1422;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    max-width: 500px;
+    width: 100%;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+}
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+.replace-list { max-height: 320px; overflow-y: auto; display: grid; gap: 0.5rem; }
+.replace-item { border: 1px solid var(--border); border-radius: 8px; padding: 0.5rem; background: #0f1624; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: border-color 0.1s ease; }
+.replace-item.selected { border-color: var(--accent); box-shadow: 0 0 0 1px rgba(122,229,130,0.25); }
+.replace-item .info { display: grid; gap: 0.2rem; }
+.replace-item .name { font-weight: 600; }
+.replace-item .meta { color: var(--muted); font-size: 0.9rem; }
+.modal .form-actions { margin-top: 0.75rem; }
+.error-text { color: var(--danger); margin-top: 0.5rem; min-height: 1.2rem; }
 .card .cell-actions { margin-top: 0.65rem; }
 
 .plan-tabs { display: flex; gap: 0.5rem; margin-bottom: 0.75rem; }
