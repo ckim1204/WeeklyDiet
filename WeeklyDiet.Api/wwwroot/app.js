@@ -48,6 +48,13 @@ const foodEditorTitle = document.getElementById('foodEditorTitle');
 
 const planContainer = document.getElementById('planContainer');
 const groceryList = document.getElementById('groceryList');
+const copyGrocery = document.getElementById('copyGrocery');
+const groceryModal = document.getElementById('groceryModal');
+const groceryChecklist = document.getElementById('groceryChecklist');
+const groceryCopy = document.getElementById('groceryCopy');
+const groceryCancel = document.getElementById('groceryCancel');
+const groceryClose = document.getElementById('groceryClose');
+const groceryError = document.getElementById('groceryError');
 const replaceModal = document.getElementById('replaceModal');
 const replaceList = document.getElementById('replaceList');
 const replaceSearch = document.getElementById('replaceSearch');
@@ -170,6 +177,10 @@ foodIngredientSearch.addEventListener('input', (e) => {
     state.foodIngredientFilter = e.target.value.toLowerCase();
     renderIngredientCheckboxes();
 });
+copyGrocery.addEventListener('click', copyGroceryList);
+groceryCopy.addEventListener('click', copyGrocerySelected);
+groceryCancel.addEventListener('click', closeGroceryDialog);
+groceryClose.addEventListener('click', closeGroceryDialog);
 replaceSearch.addEventListener('input', (e) => {
     state.replaceFilter = e.target.value.toLowerCase();
     renderReplaceList();
@@ -506,38 +517,6 @@ function renderReplaceList() {
     filtered.forEach(o => {
         const item = document.createElement('div');
         item.className = 'replace-item';
-        const info = document.createElement('div');
-        info.className = 'info';
-        const name = document.createElement('div');
-        name.className = 'name';
-        name.textContent = o.name;
-        const meta = document.createElement('div');
-        meta.className = 'meta';
-        meta.textContent = `Ingredients: ${o.ingredients.map(i => i.name).join(', ')}`;
-        info.append(name, meta);
-        const radio = document.createElement('input');
-        radio.type = 'radio';
-        radio.name = 'replaceFood';
-        radio.value = o.id;
-        radio.checked = state.replaceSelectedId === o.id;
-        radio.addEventListener('change', () => state.replaceSelectedId = o.id);
-        item.append(info, radio);
-        replaceList.appendChild(item);
-    });
-}
-
-function renderReplaceList() {
-    replaceList.innerHTML = '';
-    if (!state.replaceContext) return;
-    const { options } = state.replaceContext;
-    const filtered = options.filter(o =>
-        !state.replaceFilter ||
-        o.name.toLowerCase().includes(state.replaceFilter) ||
-        o.ingredients.some(i => i.name.toLowerCase().includes(state.replaceFilter))
-    );
-    filtered.forEach(o => {
-        const item = document.createElement('div');
-        item.className = 'replace-item';
         if (state.replaceSelectedId === o.id) {
             item.classList.add('selected');
         }
@@ -614,6 +593,57 @@ async function renderGroceryList() {
     });
 }
 
+async function copyGroceryList() {
+    const items = Array.from(groceryList.querySelectorAll('li')).map(li => li.textContent.trim()).filter(Boolean);
+    if (items.length === 0) {
+        alert('Nothing to copy yet.');
+        return;
+    }
+    groceryChecklist.innerHTML = '';
+    groceryError.textContent = '';
+    items.forEach(name => {
+        const row = document.createElement('div');
+        row.className = 'replace-item';
+        const info = document.createElement('div');
+        info.className = 'info';
+        const label = document.createElement('label');
+        label.className = 'name';
+        label.textContent = name;
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.checked = true;
+        checkbox.value = name;
+        row.append(info);
+        info.append(label);
+        row.append(checkbox);
+        groceryChecklist.appendChild(row);
+    });
+    groceryModal.classList.remove('hidden');
+}
+
+async function copyGrocerySelected() {
+    const items = Array.from(groceryChecklist.querySelectorAll('input[type=checkbox]:checked')).map(cb => cb.value);
+    if (items.length === 0) {
+        groceryError.textContent = 'Select at least one item to copy.';
+        return;
+    }
+    try {
+        await navigator.clipboard.writeText(items.join('\n'));
+        setStatus('Copied');
+        setTimeout(() => setStatus('Ready'), 1000);
+        closeGroceryDialog();
+    } catch (err) {
+        console.error(err);
+        groceryError.textContent = 'Could not copy. Please copy manually.';
+    }
+}
+
+function closeGroceryDialog() {
+    groceryChecklist.innerHTML = '';
+    groceryModal.classList.add('hidden');
+    groceryError.textContent = '';
+}
+
 function resetIngredientForm() {
     state.editingIngredientId = null;
     ingredientNameInput.value = '';
@@ -647,3 +677,7 @@ function setFoodIngredientSelection(ids) {
     await loadPlans();
     setStatus('Ready');
 })();
+
+
+
+

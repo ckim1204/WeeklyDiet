@@ -153,6 +153,8 @@ button:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; transform
 .accordion summary { cursor: pointer; color: var(--muted); }
 .accordion[open] summary { color: var(--text); }
 .accordion .tags { margin-top: 0.35rem; }
+.flex-row { display: flex; align-items: center; gap: 0.5rem; }
+.icon-btn { padding: 0.35rem 0.5rem; font-size: 1.1rem; line-height: 1; }
 
 .modal {
     position: fixed;

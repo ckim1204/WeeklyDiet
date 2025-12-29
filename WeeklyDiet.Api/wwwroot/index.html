@@ -37,7 +37,10 @@
             </div>
             <div id="planContainer"></div>
             <div class="panel-header">
-                <h3>Grocery List</h3>
+                <div class="flex-row">
+                    <h3>Grocery List</h3>
+                    <button id="copyGrocery" class="icon-btn" title="Copy to clipboard">📋</button>
+                </div>
                 <small>Updates when meals change.</small>
             </div>
             <ul id="groceryList" class="pill-list"></ul>
@@ -156,6 +159,24 @@
                 <button id="replaceCancel" class="secondary">Cancel</button>
             </div>
             <div id="replaceError" class="error-text"></div>
+        </div>
+    </div>
+
+    <div id="groceryModal" class="modal hidden" role="dialog" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h3>Copy Grocery List</h3>
+                    <small>Select items to include</small>
+                </div>
+                <button id="groceryClose" class="secondary">X</button>
+            </div>
+            <div id="groceryChecklist" class="replace-list"></div>
+            <div class="form-actions">
+                <button id="groceryCopy">Copy selected</button>
+                <button id="groceryCancel" class="secondary">Cancel</button>
+            </div>
+            <div id="groceryError" class="error-text"></div>
         </div>
     </div>
 
