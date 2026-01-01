@@ -430,11 +430,15 @@ function renderPlan() {
     }
 
     const template = document.getElementById('planTemplate');
-    const clone = template.content.cloneNode(true);
-    clone.querySelector('.plan-week').textContent = plan.weekLabel;
-    clone.querySelector('.plan-dates').textContent = `${plan.startDate} -> ${plan.endDate}`;
+    const fragment = template.content.cloneNode(true);
+    const grid = fragment.querySelector('.plan-grid');
+    const meta = grid.querySelector('.plan-meta');
+    const table = grid.querySelector('.plan-table');
+    const tbody = table.querySelector('tbody');
 
-    const tbody = clone.querySelector('tbody');
+    meta.querySelector('.plan-week').textContent = plan.weekLabel;
+    meta.querySelector('.plan-dates').textContent = `${plan.startDate} -> ${plan.endDate}`;
+
     const mealRows = ['Breakfast', 'Lunch', 'Dinner'].map(mt => {
         const tr = document.createElement('tr');
         const th = document.createElement('th');
@@ -454,7 +458,13 @@ function renderPlan() {
     });
 
     mealRows.forEach(r => tbody.appendChild(r));
-    planContainer.appendChild(clone);
+
+    const tableWrapper = document.createElement('div');
+    tableWrapper.className = 'table-container';
+    tableWrapper.appendChild(table);
+
+    planContainer.appendChild(meta);
+    planContainer.appendChild(tableWrapper);
 }
 
 function renderMealCell(plan, entry) {

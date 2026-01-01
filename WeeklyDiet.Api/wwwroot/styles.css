@@ -209,11 +209,12 @@ button:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; transform
 .meta-label { color: var(--muted); }
 .meta-value { font-weight: 600; }
 
+.table-container { width: 100%; overflow-x: auto; }
 .plan-table { width: 100%; border-collapse: collapse; text-align: left; }
 .plan-table th, .plan-table td { border: 1px solid var(--border); padding: 0.5rem; vertical-align: top; }
 .plan-table th { background: #0b1422; position: sticky; top: 0; z-index: 1; }
 .meal-cell { display: grid; gap: 0.35rem; }
-.meal-title { font-weight: 600; }
+.meal-title { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .meal-meta { color: var(--muted); font-size: 0.9rem; }
 .cell-actions { display: flex; gap: 0.35rem; flex-wrap: nowrap; align-items: center; }
 .danger { background: rgba(255, 122, 122, 0.14); color: var(--danger); border: 1px solid rgba(255, 122, 122, 0.3); }
