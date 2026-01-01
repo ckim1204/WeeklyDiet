@@ -91,16 +91,30 @@ public class PlanningService
     private async Task PruneOldPlansAsync(CancellationToken cancellationToken)
     {
         var (currentYear, currentWeek) = DateHelpers.GetCurrentIsoWeek();
-        var weeksToKeep = new HashSet<(int Year, int Week)>
+        var weeksToKeep = new List<(int Year, int Week)>
         {
             GetRelativeWeek(currentYear, currentWeek, -1),
             (currentYear, currentWeek),
             GetRelativeWeek(currentYear, currentWeek, 1)
         };
 
-        var toDelete = await _dbContext.WeeklyPlans
-            .Where(p => !weeksToKeep.Contains(new ValueTuple<int, int>(p.Year, p.WeekNumber)))
-            .ToListAsync(cancellationToken);
+        var toDeleteQuery = _dbContext.WeeklyPlans.AsQueryable();
+        if (weeksToKeep.Count == 3)
+        {
+            var a = weeksToKeep[0];
+            var b = weeksToKeep[1];
+            var c = weeksToKeep[2];
+            toDeleteQuery = toDeleteQuery.Where(p =>
+                !(p.Year == a.Year && p.WeekNumber == a.Week) &&
+                !(p.Year == b.Year && p.WeekNumber == b.Week) &&
+                !(p.Year == c.Year && p.WeekNumber == c.Week));
+        }
+        else
+        {
+            toDeleteQuery = toDeleteQuery.Where(p => weeksToKeep.All(k => !(k.Year == p.Year && k.Week == p.WeekNumber)));
+        }
+
+        var toDelete = await toDeleteQuery.ToListAsync(cancellationToken);
 
         if (toDelete.Count > 0)
         {
