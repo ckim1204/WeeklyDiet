@@ -246,7 +246,8 @@ function renderIngredients() {
             li.textContent = item.name;
 
             const editBtn = document.createElement('button');
-            editBtn.textContent = 'Edit';
+            editBtn.textContent = '✏️';
+            editBtn.title = 'Edit';
             editBtn.addEventListener('click', () => {
                 state.editingIngredientId = item.id;
                 ingredientNameInput.value = item.name;
@@ -256,7 +257,8 @@ function renderIngredients() {
             });
 
             const delBtn = document.createElement('button');
-            delBtn.textContent = 'Delete';
+            delBtn.textContent = '🗑️';
+            delBtn.title = 'Delete';
             delBtn.classList.add('danger');
             delBtn.addEventListener('click', async () => {
                 if (!confirm('Delete ingredient?')) return;
@@ -321,33 +323,19 @@ function renderFoods() {
             const card = document.createElement('div');
             card.className = 'card';
             const header = document.createElement('header');
+            const titleRow = document.createElement('div');
+            titleRow.className = 'card-row';
             const title = document.createElement('div');
+            title.className = 'card-title';
             title.textContent = food.name;
-            const chip = document.createElement('div');
-            chip.className = 'chip';
-            chip.textContent = food.allowedMealTypes.join(', ');
-            header.append(title, chip);
-
-            const accordion = document.createElement('details');
-            accordion.className = 'accordion';
-            const summary = document.createElement('summary');
-            summary.textContent = 'Ingredients';
-            accordion.appendChild(summary);
-            const tagsContainer = document.createElement('div');
-            tagsContainer.className = 'tags';
-            food.ingredients.forEach(i => {
-                const tag = document.createElement('span');
-                tag.className = 'tag';
-                tag.textContent = i.name;
-                tagsContainer.appendChild(tag);
-            });
-            accordion.appendChild(tagsContainer);
+            title.title = food.name;
 
             const actions = document.createElement('div');
             actions.className = 'cell-actions';
 
             const editBtn = document.createElement('button');
-            editBtn.textContent = 'Edit';
+            editBtn.textContent = '✏️';
+            editBtn.title = 'Edit';
             editBtn.addEventListener('click', () => {
                 state.editingFoodId = food.id;
                 foodNameInput.value = food.name;
@@ -364,7 +352,8 @@ function renderFoods() {
             });
 
             const delBtn = document.createElement('button');
-            delBtn.textContent = 'Delete';
+            delBtn.textContent = '🗑️';
+            delBtn.title = 'Delete';
             delBtn.classList.add('danger');
             delBtn.addEventListener('click', async () => {
                 if (!confirm('Delete food?')) return;
@@ -374,7 +363,24 @@ function renderFoods() {
             });
 
             actions.append(editBtn, delBtn);
-            card.append(header, accordion, actions);
+            titleRow.append(title, actions);
+
+            const mealTypes = document.createElement('div');
+            mealTypes.className = 'chip';
+            mealTypes.textContent = food.allowedMealTypes.join(', ');
+
+            header.append(titleRow, mealTypes);
+
+            const tagsContainer = document.createElement('div');
+            tagsContainer.className = 'tags';
+            food.ingredients.forEach(i => {
+                const tag = document.createElement('span');
+                tag.className = 'tag';
+                tag.textContent = i.name;
+                tagsContainer.appendChild(tag);
+            });
+
+            card.append(header, tagsContainer);
             foodList.appendChild(card);
         });
 }

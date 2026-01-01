@@ -137,22 +137,24 @@ button:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; transform
 }
 .pill-list button { padding: 0.2rem 0.5rem; font-size: 0.85rem; }
 
-.card-list { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.card-list { display: grid; gap: 0.75rem; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
 .card {
     border: 1px solid var(--border);
     background: #0b1422;
     border-radius: 10px;
     padding: 0.75rem;
 }
-.card header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.4rem; }
-.chip { background: rgba(122, 229, 130, 0.18); color: var(--accent); border: 1px solid rgba(122, 229, 130, 0.4); padding: 0.2rem 0.45rem; border-radius: 999px; font-size: 0.85rem; }
+.card header { display: grid; grid-template-columns: 1fr; gap: 0.25rem; margin-bottom: 0.4rem; width: 100%; }
+.card .card-row { display: flex; align-items: center; gap: 0.35rem; width: 100%; overflow: hidden; }
+.card .card-title { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .card-row .cell-actions { flex-shrink: 0; display: inline-flex; gap: 0.25rem; margin-left: auto; }
+.chip { background: rgba(122, 229, 130, 0.18); color: var(--accent); border: 1px solid rgba(122, 229, 130, 0.4); padding: 0.2rem 0.45rem; border-radius: 999px; font-size: 0.85rem; display: inline-flex; align-self: start; justify-self: start; width: auto; max-width: 100%; }
+.cell-actions button { padding: 0.35rem 0.45rem; font-size: 0.9rem; }
 .chip.subtle { background: rgba(255,255,255,0.05); color: var(--muted); border-color: var(--border); }
 .tags { display: flex; gap: 0.35rem; flex-wrap: wrap; }
 .tag { padding: 0.25rem 0.45rem; background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 8px; color: var(--muted); font-size: 0.85rem; }
-.accordion { border: 1px solid var(--border); border-radius: 8px; background: #0b1422; padding: 0.35rem 0.5rem; }
-.accordion summary { cursor: pointer; color: var(--muted); }
-.accordion[open] summary { color: var(--text); }
-.accordion .tags { margin-top: 0.35rem; }
+.card { display: flex; flex-direction: column; }
+.card .cell-actions { margin-top: auto; }
 .flex-row { display: flex; align-items: center; gap: 0.5rem; }
 .icon-btn { padding: 0.35rem 0.5rem; font-size: 1.1rem; line-height: 1; }
 
