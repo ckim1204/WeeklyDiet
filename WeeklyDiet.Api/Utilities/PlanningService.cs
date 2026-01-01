@@ -29,6 +29,8 @@ public class PlanningService
             throw new InvalidOperationException($"Plan for {year}-W{weekNumber} already exists.");
         }
 
+        await PruneOldPlansAsync(cancellationToken);
+
         var foods = await _dbContext.Foods
             .Include(f => f.Ingredients)
             .ToListAsync(cancellationToken);
@@ -84,6 +86,33 @@ public class PlanningService
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         return await GetPlanAsync(year, weekNumber, cancellationToken) ?? plan;
+    }
+
+    private async Task PruneOldPlansAsync(CancellationToken cancellationToken)
+    {
+        var (currentYear, currentWeek) = DateHelpers.GetCurrentIsoWeek();
+        var weeksToKeep = new HashSet<(int Year, int Week)>
+        {
+            GetRelativeWeek(currentYear, currentWeek, -1),
+            (currentYear, currentWeek),
+            GetRelativeWeek(currentYear, currentWeek, 1)
+        };
+
+        var toDelete = await _dbContext.WeeklyPlans
+            .Where(p => !weeksToKeep.Contains(new ValueTuple<int, int>(p.Year, p.WeekNumber)))
+            .ToListAsync(cancellationToken);
+
+        if (toDelete.Count > 0)
+        {
+            _dbContext.WeeklyPlans.RemoveRange(toDelete);
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+    }
+
+    private static (int Year, int Week) GetRelativeWeek(int year, int week, int offset)
+    {
+        var referenceDate = ISOWeek.ToDateTime(year, week, DayOfWeek.Monday).Date.AddDays(offset * 7);
+        return (ISOWeek.GetYear(referenceDate), ISOWeek.GetWeekOfYear(referenceDate));
     }
 
     public async Task<MealEntry?> ReplaceMealAsync(int year, int weekNumber, int dayOfWeek, MealType mealType, int foodId, CancellationToken cancellationToken = default)
