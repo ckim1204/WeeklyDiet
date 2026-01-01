@@ -476,10 +476,23 @@ function renderMealCell(plan, entry) {
 
     if (state.selectedPlanKey === 'current') {
         const isSourceForLeftover = plan.meals.some(m => m.leftoverFromMealEntryId === entry.id);
-        const leftoverBtn = document.createElement('button');
-        leftoverBtn.textContent = isSourceForLeftover ? 'Clear leftover' : 'Use as leftover';
-        leftoverBtn.addEventListener('click', () => toggleLeftover(plan, entry, !isSourceForLeftover));
-        actions.appendChild(leftoverBtn);
+        const toggleLabel = document.createElement('label');
+        toggleLabel.className = 'toggle';
+        const toggle = document.createElement('input');
+        toggle.type = 'checkbox';
+        toggle.checked = isSourceForLeftover;
+        const toggleText = document.createElement('span');
+        toggleText.textContent = 'Leftover';
+        toggle.addEventListener('change', async () => {
+            try {
+                await toggleLeftover(plan, entry, toggle.checked);
+            } catch (err) {
+                console.error(err);
+                toggle.checked = !toggle.checked;
+            }
+        });
+        toggleLabel.append(toggle, toggleText);
+        actions.appendChild(toggleLabel);
     }
 
     cell.appendChild(actions);

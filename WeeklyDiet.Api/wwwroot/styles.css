@@ -213,8 +213,10 @@ button:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none; transform
 .meal-cell { display: grid; gap: 0.35rem; }
 .meal-title { font-weight: 600; }
 .meal-meta { color: var(--muted); font-size: 0.9rem; }
-.cell-actions { display: flex; gap: 0.35rem; flex-wrap: wrap; }
+.cell-actions { display: flex; gap: 0.35rem; flex-wrap: nowrap; align-items: center; }
 .danger { background: rgba(255, 122, 122, 0.14); color: var(--danger); border: 1px solid rgba(255, 122, 122, 0.3); }
+.toggle { display: inline-flex; align-items: center; gap: 0.3rem; background: #0b1422; border: 1px solid var(--border); border-radius: 8px; padding: 0.3rem 0.5rem; color: var(--text); cursor: pointer; }
+.toggle input { accent-color: var(--accent); }
 
 .hidden { display: none !important; }
 .view { grid-column: 1 / -1; }
