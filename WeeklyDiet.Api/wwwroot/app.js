@@ -532,6 +532,7 @@ function openReplaceDialog(plan, entry) {
     replaceSubtitle.textContent = `${plan.weekLabel} · Day ${entry.dayOfWeek}`;
     renderReplaceList();
     replaceModal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
 }
 
 function renderReplaceList() {
@@ -588,6 +589,7 @@ function closeReplaceDialog() {
     state.replaceSelectedId = null;
     state.replaceFilter = '';
     replaceError.textContent = '';
+    document.body.classList.remove('modal-open');
 }
 
 async function toggleLeftover(plan, entry, isLeftover) {
@@ -648,6 +650,7 @@ async function copyGroceryList() {
         groceryChecklist.appendChild(row);
     });
     groceryModal.classList.remove('hidden');
+    document.body.classList.add('modal-open');
 }
 
 async function copyGrocerySelected() {
@@ -671,6 +674,7 @@ function closeGroceryDialog() {
     groceryChecklist.innerHTML = '';
     groceryModal.classList.add('hidden');
     groceryError.textContent = '';
+    document.body.classList.remove('modal-open');
 }
 
 function resetIngredientForm() {
